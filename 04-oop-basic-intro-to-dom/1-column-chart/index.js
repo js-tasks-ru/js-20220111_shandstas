@@ -1,11 +1,16 @@
 export default class ColumnChart {
-  constructor(options) {
-    this.link = options?.link;
-    this.data = options?.data || [];
-    this.label = options?.label || '';
-    this.value = options?.value || '';
-    this.chartHeight = options?.chartHeight || 50;
-    this.formatHeading = options?.formatHeading;
+  constructor(data = [],
+              label = '',
+              link = '',
+              value = 0,
+              chartHeight = 50,
+              formatHeading = data => data = {}) {
+    this.link = link;
+    this.data = data;
+    this.label = label;
+    this.value = value;
+    this.chartHeight = chartHeight;
+    this.formatHeading = formatHeading;
 
     this.render();
   }
@@ -70,7 +75,6 @@ export default class ColumnChart {
       const barElement = document.createElement('div');
 
       const percentValue = Math.round(value / maxValue * 100) + '%';
-      //const numberValue = Math.round(this.chartHeight / 100 * value);
       const numberValue = Math.floor(this.chartHeight / maxValue * value) + '';
 
       barElement.style.setProperty('--value', numberValue);
