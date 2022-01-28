@@ -1,87 +1,76 @@
 export default class ColumnChart {
-  constructor(data = [],
-              label = '',
-              link = '',
-              value = 0,
-              chartHeight = 50,
-              formatHeading = data => data = {}) {
-    this.link = link;
-    this.data = data;
-    this.label = label;
-    this.value = value;
-    this.chartHeight = chartHeight;
-    this.formatHeading = formatHeading;
+
+  constructor(columnChartData) {
+    this.data = columnChartData?.data || [];
+    this.label = columnChartData?.label || '';
+    this.link = columnChartData?.link || '';
+    this.value = columnChartData?.value || 0;
+    this.formatHeading = columnChartData?.formatHeading || function(data) { return data };
+
+    this.chartHeight = 50;
 
     this.render();
   }
 
-  getTemplate () {
+  getValue() {
+    return this.formatHeading(this.value);
+  }
+
+  getColumnProps() {
+    const maxValue = Math.max(...this.data);
+    const scale = this.chartHeight / maxValue;
+
+    return this.data.map(item => {
+      return {
+        percent: (item / maxValue * 100).toFixed(0) + '%',
+        value: String(Math.floor(item * scale))
+      };
+    });
+  }
+
+  getTemplate() {
     return `
-      <div class="column-chart" style="--chart-height: ${this.chartHeight}">
-        <div class="column-chart__title">
-          Total ${this.label}
-        </div>
-        <div class="column-chart__container">
-          <div data-element="header" class="column-chart__header">${this.getHeading()}</div>
-          <div data-element="body" class="column-chart__chart"></div>
-        </div>
-      </div>
-    `;
+            <div class="column-chart" style="--chart-height: ${this.chartHeight}">
+                <div class="column-chart__title">
+                    ${this.label}
+                    <a href="/sales" class="column-chart__link">View all</a>
+                </div>
+                <div class="column-chart__container">
+                    <div data-element="header" class="column-chart__header">${this.getValue()}</div>
+                    <div data-element="body" class="column-chart__chart"></div>
+                </div>
+            </div>
+        `
   }
 
   render() {
-    const div = document.createElement('div');
+    const element = document.createElement('div');
 
-    div.innerHTML = this.getTemplate();
+    element.innerHTML = this.getTemplate();
 
-    this.element = div.firstElementChild;
+    this.element = element.firstElementChild;
 
-    this.toLink();
-    this.update(this.data);
+    this.createHistogram(this.data);
   }
 
-
-  getHeading() {
-    if (typeof this.formatHeading === 'function') {
-      return this.formatHeading.call(this, this.value);
-    }
-
-    return this.value;
-  }
-
-  toLink() {
-    if (!this.link) {
+  createHistogram(data) {
+    if(!data.length)  {
+      this.element.classList.add('column-chart_loading');
       return;
     }
-
-    const parent = this.element.querySelector('.column-chart__title');
-    parent.insertAdjacentHTML('beforeend', `<a href="${this.link}" class="column-chart__link">View all</a>`);
+    const histogram = this.element.querySelector('[data-element="body"]');
+    histogram.innerHTML = '';
+    const arr = this.getColumnProps();
+    for(let item of arr) {
+      const bar = document.createElement('div');
+      bar.style.setProperty('--value', item.value);
+      bar.setAttribute('data-tooltip', item.percent);
+      histogram.append(bar)
+    }
   }
 
   update(data) {
-    this.element.classList.add('column-chart_loading');
-
-    if (data.length) {
-      this.element.classList.remove('column-chart_loading');
-    }
-
-    const dataRoot = this.element.querySelector('[data-element="body"]');
-
-    dataRoot.innerHTML = '';
-
-    const maxValue = Math.max(...data);
-
-    data.forEach((value) => {
-      const barElement = document.createElement('div');
-
-      const percentValue = Math.round(value / maxValue * 100) + '%';
-      const numberValue = Math.floor(this.chartHeight / maxValue * value) + '';
-
-      barElement.style.setProperty('--value', numberValue);
-      barElement.dataset.tooltip = percentValue;
-
-      dataRoot.append(barElement);
-    });
+    this.createHistogram(data);
   }
 
   remove() {
