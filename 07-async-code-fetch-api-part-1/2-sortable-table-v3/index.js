@@ -96,7 +96,6 @@ export default class SortableTable {
   }
 
   sortControlClicked = (event) => {
-
     const item = event.target.closest('[data-sortable="true"]');
     if (!item) {
       return;
