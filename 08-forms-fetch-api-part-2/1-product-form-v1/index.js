@@ -231,7 +231,7 @@ export default class ProductForm {
     return subElements;
   }
 
-  getImageItem (url, name) {
+  getImageItem(url, name) {
     const wrapper = document.createElement('div');
 
     wrapper.innerHTML = `
